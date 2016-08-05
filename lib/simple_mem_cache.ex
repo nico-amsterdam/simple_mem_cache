@@ -1,13 +1,3 @@
-# Network latency:
-#  - 0.2 milliseconds or lower. Even google 8.8.8.8 has only 0.4 milliseconds latency.
-#  - check if TCP_NODELAY=on for the connections
-# How: place them in the same rack, 1 switch (1 microsecond latency), no firewalls
-#
-#
-# Eternal is een verbeterde immortal, waar een table die doodgaat na hercreatie opnieuw gekoppeld wordt
-#   Eternal.new(:table_name, [ :named_table, :set, { :read_concurrency, true }, { :write_concurrency, true }])
-#   :table_name
-#
 defmodule SimpleMemCache do
 
   @moduledoc ~S'''
