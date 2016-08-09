@@ -46,11 +46,12 @@ defmodule SimpleMemCache.Mixfile do
   end
 
   defp package do
-    [# These are the default files included in the package
+    [
      name: :simple_mem_cache,
      maintainers: ["Nico Hoogervorst"],
      licenses: ["MIT"],
-     links: %{"GitHub" => "https://github.com/nico-amsterdam/simple_mem_cache"}]
+     links: %{"GitHub" => "https://github.com/nico-amsterdam/simple_mem_cache"}
+    ]
   end
 
 end
