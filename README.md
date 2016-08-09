@@ -1,17 +1,17 @@
 # SimpleMemCache
 
-Trade memory for performance
+Trade memory for performance.
 
-In-memory key-value cache with expiration-time after creation/modification/access, automatic value loading and time travel support.
+In-memory key-value cache with expiration-time after creation/modification/access (a.k.a. entry time-to-live and entry idle-timeout), automatic value loading and time travel support.
 
 
 ## Installation
 
-  1. Add `gen_server_mem_cache` to your list of dependencies in `mix.exs`:
+  1. Add `simple_mem_cache` to your list of dependencies in `mix.exs`:
 
     ```elixir
     def deps do
-      [{:gen_server_mem_cache, github: "nico-amsterdam/gen_server_mem_cache"}]
+      [{:simple_mem_cache, "~> 0.1.0"}]
     end
     ```
 
@@ -81,7 +81,7 @@ Note about automatically new value loading:
   - updates are still possible:
 
     ```elixir
-    :ok = SimpleMemCache.put(SimpleMemCache, "products", new_value)
+    SimpleMemCache.put(SimpleMemCache, "products", new_value)
     ```
 
 or you can force an automatically load at first access by invalidating the cached item.
@@ -104,7 +104,7 @@ iex(1)> f_now = fn -> DateTime.to_string(DateTime.utc_now()) end
 iex(2)> tid = :ets.new(__MODULE__, [:set, :public, {:read_concurrency, true}, {:write_concurrency, true}])
 127009
 iex(3)> SimpleMemCache.put(tid, "key1", "value1")
-:ok
+"value1"
 iex(4)> SimpleMemCache.get(tid, "key1")
 {:ok, "value1"}
 iex(5)> SimpleMemCache.get!(tid, "key1")
@@ -115,9 +115,9 @@ iex(7)> SimpleMemCache.get(tid, "key1")
 {:not_cached, nil}
 iex(8)> SimpleMemCache.get!(tid, "key1")
 nil
-iex(9)> IO.puts f_now.(); SimpleMemCache.put(tid, "key1", "value1", 1); # one minute
+iex(9)> IO.puts f_now.(); SimpleMemCache.put(tid, "key1", 1, "value1"); # one minute
 2016-08-03 22:42:04.410133Z
-:ok
+"value1"
 iex(10)> IO.puts f_now.(); SimpleMemCache.get(tid, "key1")
 2016-08-03 22:42:36.641060Z
 {:ok, "value1"}
@@ -136,11 +136,11 @@ iex(14)> IO.puts f_now.(); SimpleMemCache.cache(tid, "key2", 1, f_new_value); # 
 iex(15)> SimpleMemCache.get(tid, "key1")
 {:not_cached, nil}
 iex(16)> SimpleMemCache.put(tid, "key2", "value2_changed")
-:ok
+"value2_changed"
 iex(17)> SimpleMemCache.get(tid, "key2")
 {:ok, "value2_changed"}
 iex(18)> SimpleMemCache.put(tid, "key3", %{"a" => 1, "b" => {1, 2, "whatever"}})  # put whatever you want
-:ok
+%{"a" => 1, "b" => {1, 2, "whatever"}}
 iex(19)> SimpleMemCache.get!(tid, "key3") |> Map.get("b")
 {1, 2, "whatever"}
 iex(20)> SimpleMemCache.stop(tid)
@@ -153,3 +153,7 @@ iex(21)> SimpleMemCache.get!(tid, "key2")
     (simple_mem_cache) lib/simple_mem_cache.ex:111: SimpleMemCache.get!/3
 
 ```
+
+## License
+
+[MIT](LICENSE)
