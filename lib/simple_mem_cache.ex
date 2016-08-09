@@ -172,7 +172,42 @@ defmodule SimpleMemCache do
     end
   end
 
-  # Yes Credo, I know this function is too complex.
+  @lint [{Credo.Check.Refactor.ABCSize,false}, {Credo.Check.Refactor.CyclomaticComplexity, false}]
+  defp ets_get_status(key, map_value, minutes_keep_alive, warn, now) do
+    case map_value do
+       [] -> {:not_cached, nil, nil}
+       [{^key, value, expires, _}]  when (minutes_keep_alive != nil and minutes_keep_alive >= 0) or (is_nil(minutes_keep_alive) and is_nil(expires)) -> {:ok, value, expires}
+       [{^key, value, expires, count}] when warn and count == 0 and is_nil(minutes_keep_alive) and expires <= now + 30 and expires > now -> {:expire_warning, value, expires}
+       [{^key, value, expires, _}] when expires != nil and expires >= now -> {:ok, value, expires}
+       [{^key, old_value, expires, _}] -> {:expired, old_value, expires}
+    end
+  end
+
+  defp ets_get_expire_warning(table, key, status, f_system_time) do
+    # is this really The One?
+    if status == :expire_warning do
+      # atomic operation:
+      warning_count = :ets.update_counter(table, key, {4, 1})
+      if warning_count != 1 do
+        # pitty, degrade to ok status
+        :ok
+      else
+        # Greetings Neo, buy yourself some time
+
+        # The client interface cache-method handles expire_warnings, therefore:
+        # 1 till 30 seconds before expiring, the first caller gets a warning and 30 seconds to come with a new value. 
+        # During the next 30 seconds other clients receive ok, with the existing cached value.
+        # After 30 seconds, if no new value is set, again an expire_warning will be given. 
+        # The purpose of this: for very frequent requested keys, don't create a give-me-new-value storm when the value expires;
+        # assign the task for getting a new value to one client.
+        :ets.update_element(table, key, {3, f_system_time.() + 60})
+        :expire_warning
+      end 
+    else
+      status
+    end
+  end
+
   defp ets_get(table, {key, minutes_keep_alive, warn}, {f_system_time, expire_check_time}) do
     now = f_system_time.()
 
@@ -180,38 +215,8 @@ defmodule SimpleMemCache do
     map_value = :ets.lookup(table, key)
     
     # determine status
-    {status, value, expires} = case map_value do
-       [] -> {:not_cached, nil, nil}
-       [{^key, value, expires, _}] when minutes_keep_alive != nil and minutes_keep_alive >= 0 -> {:ok, value, expires}
-       [{^key, value, expires, _}] when is_nil(expires) and is_nil(minutes_keep_alive) -> {:ok, value, expires}
-       [{^key, value, expires, count}] when warn and count == 0 and is_nil(minutes_keep_alive) and expires <= now + 30 and expires > now -> {:expire_warning, value, expires}
-       [{^key, value, expires, _}] when expires != nil and expires >= now -> {:ok, value, expires}
-       [{^key, old_value, expires, _}] -> {:expired, old_value, expires}
-    end
-
-    # is this really The One?
-    status = 
-      if status == :expire_warning do
-        # atomic operation:
-        warning_count = :ets.update_counter(table, key, {4, 1})
-        if warning_count != 1 do
-          # pitty, degrade to ok status
-          :ok
-        else
-          # Greetings Neo, buy yourself some time
- 
-          # The client interface cache-method handles expire_warnings, therefore:
-          # 1 till 30 seconds before expiring, the first caller gets a warning and 30 seconds to come with a new value. 
-          # During the next 30 seconds other clients receive ok, with the existing cached value.
-          # After 30 seconds, if no new value is set, again an expire_warning will be given. 
-          # The purpose of this: for very frequent requested keys, don't create a give-me-new-value storm when the value expires;
-          # assign the task for getting a new value to one client.
-          :ets.update_element(table, key, {3, f_system_time.() + 60})
-          :expire_warning
-        end 
-      else
-        status
-      end
+    {status, value, expires} = ets_get_status(key, map_value, minutes_keep_alive, warn, now) 
+    status = ets_get_expire_warning(table, key, status, f_system_time)
 
     # if needed, set new expire time to keep this cached item alive
     if status != :not_cached and minutes_keep_alive != nil and  
