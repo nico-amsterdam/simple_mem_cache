@@ -19,7 +19,8 @@ defmodule SimpleMemCacheTest do
 
     SimpleMemCache.set_system_time_function(tid, f_now);
 
-    :ok = SimpleMemCache.put(tid, "key1", "value1", 8);
+    putval = SimpleMemCache.put(tid, "key1", 8, "value1");
+    assert putval == "value1"
 
     SimpleMemCache.set_system_time_function(tid, f_now_plus_10);
     
@@ -39,7 +40,8 @@ defmodule SimpleMemCacheTest do
 
     SimpleMemCache.set_system_time_function(tid, f_now);
 
-    :ok = SimpleMemCache.put(tid, "key1", "value1", 8);
+    putval = SimpleMemCache.put(tid, "key1", 8, "value1");
+    assert putval == "value1"
 
     SimpleMemCache.set_system_time_function(tid, f_now_plus_10);
 
@@ -61,7 +63,8 @@ defmodule SimpleMemCacheTest do
 
     SimpleMemCache.set_system_time_function(tid, f_now);
 
-    :ok = SimpleMemCache.put(tid, "key1", "value1", 8);
+    putval = SimpleMemCache.put(tid, "key1", 8, "value1");
+    assert putval == "value1"
 
     SimpleMemCache.set_system_time_function(tid, f_now_plus_5);
 
@@ -87,7 +90,8 @@ defmodule SimpleMemCacheTest do
 
     SimpleMemCache.set_system_time_function(tid, f_now);
 
-    :ok = SimpleMemCache.put(tid, "key1", "value1", 8);
+    putval = SimpleMemCache.put(tid, "key1", 8, "value1");
+    assert putval == "value1"
 
     SimpleMemCache.set_system_time_function(tid, f_now_plus_5);
 
@@ -119,7 +123,8 @@ defmodule SimpleMemCacheTest do
 
     SimpleMemCache.set_system_time_function(tid, f_now);
 
-    :ok = SimpleMemCache.put(tid, "key1", "value1", 8);
+    putval = SimpleMemCache.put(tid, "key1", 8, "value1");
+    assert putval == "value1"
 
     SimpleMemCache.set_system_time_function(tid, f_now_plus_5);
 
@@ -155,7 +160,8 @@ defmodule SimpleMemCacheTest do
 
     SimpleMemCache.set_system_time_function(tid, f_now);
 
-    :ok = SimpleMemCache.put(tid, "key1", "value1");
+    putval = SimpleMemCache.put(tid, "key1", "value1");
+    assert putval == "value1"
 
     SimpleMemCache.set_system_time_function(tid, f_now_plus_10);
 
@@ -168,7 +174,8 @@ defmodule SimpleMemCacheTest do
 
     SimpleMemCache.set_system_time_function(tid, f_now_plus_30);
 
-    :ok = SimpleMemCache.put(tid, "key1", "value2");
+    putval = SimpleMemCache.put(tid, "key1", "value2");
+    assert putval == "value2"
 
     result = SimpleMemCache.get(tid, "key1");
     assert result == {:ok, "value2"}
@@ -188,7 +195,8 @@ defmodule SimpleMemCacheTest do
 
     SimpleMemCache.set_system_time_function(tid, f_now);
 
-    :ok = SimpleMemCache.put(tid, "key1", "value1");
+    putval = SimpleMemCache.put(tid, "key1", "value1");
+    assert putval == "value1"
 
     SimpleMemCache.set_system_time_function(tid, f_now_plus_10);
 
@@ -203,7 +211,8 @@ defmodule SimpleMemCacheTest do
     SimpleMemCache.set_system_time_function(tid, f_now_plus_30);
 
     # a new put overwrites whatever expire time there was
-    :ok = SimpleMemCache.put(tid, "key1", "value2");
+    putval = SimpleMemCache.put(tid, "key1", "value2");
+    assert putval == "value2"
 
     SimpleMemCache.set_system_time_function(tid, f_now_plus_40);
 
@@ -223,7 +232,8 @@ defmodule SimpleMemCacheTest do
 
     SimpleMemCache.set_system_time_function(tid, f_now);
 
-    :ok = SimpleMemCache.put(tid, "key1", "value1", 8);
+    putval = SimpleMemCache.put(tid, "key1", 8, "value1");
+    assert putval == "value1"
 
     SimpleMemCache.set_system_time_function(tid, f_now_plus_7_plus_30_seconds) 
 

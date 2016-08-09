@@ -53,22 +53,20 @@ defmodule SimpleMemCache do
     case cache_value do
        {:ok, value}             -> value
        {:expire_warning, value} -> spawn(fn -> try do 
-                                                 :ok = put(table, key, f_new_value.(), minutes_valid) 
+                                                 put(table, key, minutes_valid, f_new_value.()) 
                                                rescue
-                                                 ArgumentError -> :error   # table is deleted
+                                                 ArgumentError -> :error   # table is deleted, ignore
                                                end
                                          end)
                                    value
-       _                        -> new_value = f_new_value.()
-                                   :ok = put(table, key, new_value, minutes_valid)
-                                   new_value
+       _                        -> put(table, key, minutes_valid, f_new_value.())
     end
   end
 
   @doc "Create or update an item in cache."
-  @spec put(table, Map.key, Map.value, integer) :: term
-  def put(table, key, value, minutes_valid \\ nil) do
-    ets_put(table, {key, value, minutes_valid}, get_cache_state!(table))
+  @spec put(table, Map.key, integer, Map.value) :: any
+  def put(table, key, minutes_valid \\ nil, value) do
+    ets_put(table, {key, minutes_valid, value}, get_cache_state!(table))
   end
 
   @doc "Remove an item from cache. Returns the value of the removed object."
@@ -143,7 +141,7 @@ defmodule SimpleMemCache do
     :ok
   end
 
-  defp ets_put(table, {key, value, minutes_valid}, {f_system_time, expire_check_time}) do
+  defp ets_put(table, {key, minutes_valid, value}, {f_system_time, expire_check_time}) do
     now = f_system_time.()
     expires = if is_nil(minutes_valid), do: nil, else: now + minutes_valid * 60
     true = :ets.insert(table, {key, value, expires, 0})
@@ -154,7 +152,7 @@ defmodule SimpleMemCache do
     else
       check_expired(table, now, expire_check_time)
     end
-    :ok
+    value
   end
 
   # delete the whole table
