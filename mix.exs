@@ -38,10 +38,10 @@ defmodule SimpleMemCache.Mixfile do
 
   defp description do
     """
-    Trade memory for performance.
+    ETS backed in-memory key-value cache with entry expiration after creation (TTL) or last access (idle-timout) and automatic value loading.
+    Expired entries are automatically purged. Supports time travel.
 
-    In-memory key-value cache with expiration-time after creation/modification/access (a.k.a. entry time-to-live and entry idle-timeout), automatic value loading and time travel support.
-    Uses ETS table.
+    Trade memory for performance.
     """
   end
 

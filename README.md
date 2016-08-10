@@ -11,7 +11,7 @@ In-memory key-value cache with expiration-time after creation/modification/acces
 
     ```elixir
     def deps do
-      [{:simple_mem_cache, "~> 0.1.0"}]
+      [{:simple_mem_cache, "~> 0.1"}]
     end
     ```
 
