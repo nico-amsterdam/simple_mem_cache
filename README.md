@@ -73,9 +73,14 @@ Note about automatically new value loading:
 
 ### Keep as long as the ets table exists
 
-  - Example: cache products retrieved from csv file
+  - Example: Cache products retrieved from csv file. Not a good example, because nowadays files are stored on SSD and there will be no performance gain.
+  
     ```elixir
-    products = SimpleMemCache.cache(SimpleMemCache, "products", fn -> "products.csv" |> File.stream! |> CSV.decode |> Enum.to_list  end)
+    products = SimpleMemCache.cache(SimpleMemCache, "products", fn -> "products.csv" 
+                                                                      |> File.stream! 
+                                                                      |> CSV.parse_stream 
+                                                                      |> Enum.to_list 
+                                                                end)
     ```
     
   - updates are still possible:
