@@ -2,7 +2,7 @@
 
 Trade memory for performance.
 
-In-memory key-value cache with expiration-time after creation/modification/access (a.k.a. entry time-to-live and entry idle-timeout), automatic value loading and time travel support.
+In-memory key-value cache with expiration-time after creation or last access (a.k.a. entry time-to-live and entry idle-timeout), automatic value loading and time travel support.
 
 
 ## Installation
@@ -27,17 +27,17 @@ In-memory key-value cache with expiration-time after creation/modification/acces
   
   To create the ets table I recommend [Eternal](https://hex.pm/packages/eternal).
   
-  Code will be something like this:
+  Code example:
 
     ```elixir
 
     defmodule MyProject do
       use Application
       
-  def start(_type, _args) do
-    import Supervisor.Spec, warn: false
-    
-    Eternal.new(SimpleMemCache, [ :named_table, :set, { :read_concurrency, true }, { :write_concurrency, true }])
+      def start(_type, _args) do
+        import Supervisor.Spec, warn: false
+        
+        Eternal.new(SimpleMemCache, [ :named_table, :set, { :read_concurrency, true }, { :write_concurrency, true }])
 
     ```
 
@@ -60,7 +60,7 @@ In-memory key-value cache with expiration-time after creation/modification/acces
       ```
 
 Note about automatically new value loading:
-- How long this function take to get the new value, and is this acceptable when the old value is expired? If it takes too long, consider to use an scheduler to regularly recalculate the new value and update the cache with that.
+- How long does this function take to get the new value, and is this acceptable when the old value is expired? If it takes too long, consider to use an scheduler to regularly recalculate the new value and update the cache with that.
 
 
 ### Keep in cache for a limited time but extend life-time everytime it is accessed
@@ -71,11 +71,16 @@ Note about automatically new value loading:
     countries_response = SimpleMemCache.cache(SimpleMemCache, "countries_response", 20, true, fn -> HTTPoison.get! "http://restcountries.eu/rest/v1/" end)
     ```
 
-### Keep as long this process is running
+### Keep as long as the ets table exists
 
-  - Example: cache products retrieved from csv file
+  - Example: Cache products retrieved from csv file. Not a good example, because nowadays files are stored on SSD and there will be no performance gain.
+  
     ```elixir
-    products = SimpleMemCache.cache(SimpleMemCache, "products", fn -> "products.csv" |> File.stream! |> CSV.decode |> Enum.to_list  end)
+    products = SimpleMemCache.cache(SimpleMemCache, "products", fn -> "products.csv" 
+                                                                      |> File.stream! 
+                                                                      |> CSV.parse_stream 
+                                                                      |> Enum.to_list 
+                                                                end)
     ```
     
   - updates are still possible:
@@ -91,7 +96,7 @@ or you can force an automatically load at first access by invalidating the cache
   - Example: remove products from cache
 
     ```elixir
-    :ok = SimpleMemCache.remove(SimpleMemCache, "products")
+    old_value = SimpleMemCache.remove(SimpleMemCache, "products")
     ```
 
 ## IEx demo
