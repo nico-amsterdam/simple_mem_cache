@@ -16,7 +16,7 @@ defmodule SimpleMemCache do
   The `f_system_time` parameter is meant for time travel support. You can provide a function that returns the Unix/Posix UTC time in seconds. Set nil to restore the normal system time.
   '''
   @spec set_system_time_function(table, (() -> integer)) :: :ok
-  def set_system_time_function(table, f_system_time \\ nil) do
+  def set_system_time_function(table, f_system_time) do
     # in case we travel back in time, we stil want to check expired entries every minute:
     next_expire_time = f_system_time.() + 60
     true = :ets.insert(table, {@cache_state_key, f_system_time, next_expire_time})
@@ -47,7 +47,7 @@ defmodule SimpleMemCache do
       news_page = SimpleMemCache.cache(SimpleMemCache, "news", 10, &scrape_news/0)
 
   '''
-  @spec cache(table, Map.key, integer, boolean, (() -> any)) :: any
+  @spec cache(table, Map.key, integer | nil, boolean | nil, (() -> any)) :: any
   def cache(table, key, minutes_valid \\ nil, keep_alive \\ false, f_new_value) do
     cache_value = ets_get(table, {key, (if keep_alive, do: minutes_valid, else: nil), true}, get_cache_state!(table))
     case cache_value do
@@ -64,7 +64,7 @@ defmodule SimpleMemCache do
   end
 
   @doc "Create or update an item in cache."
-  @spec put(table, Map.key, integer, Map.value) :: any
+  @spec put(table, Map.key, integer | nil, Map.value) :: any
   def put(table, key, minutes_valid \\ nil, value) do
     ets_put(table, {key, minutes_valid, value}, get_cache_state!(table))
   end
@@ -88,13 +88,13 @@ defmodule SimpleMemCache do
       {:expired, "Fret dots"}
     
   '''
-  @spec get(table, Map.key, integer) :: {term, any}
+  @spec get(table, Map.key, integer | nil) :: {term, any}
   def get(table, key, minutes_keep_alive \\ nil) do
     ets_get(table, {key, minutes_keep_alive, false}, get_cache_state!(table))
   end
 
   @doc "Get value of cached item. Nil if is not cached or when value is nil."
-  @spec get!(table, Map.key, integer) :: any
+  @spec get!(table, Map.key, integer | nil) :: any
   def get!(table, key, minutes_keep_alive \\ nil) do
     {_, value} = get(table, key, minutes_keep_alive)
     value
