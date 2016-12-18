@@ -15,10 +15,10 @@ defmodule SimpleMemCache do
 
   The `f_system_time` parameter is meant for time travel support. You can provide a function that returns the Unix/Posix UTC time in seconds. Set nil to restore the normal system time.
   '''
-  @spec set_system_time_function(table, (() -> integer)) :: :ok
-  def set_system_time_function(table, f_system_time) do
+  @spec set_system_time_function(table, (() -> integer) | nil) :: :ok
+  def set_system_time_function(table, f_system_time \\ nil) do
     # in case we travel back in time, we stil want to check expired entries every minute:
-    next_expire_time = f_system_time.() + 60
+    next_expire_time = (f_system_time || &system_time/0).() + 60
     true = :ets.insert(table, {@cache_state_key, f_system_time, next_expire_time})
     :ok
   end
