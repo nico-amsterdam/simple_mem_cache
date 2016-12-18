@@ -11,7 +11,7 @@ defmodule SimpleMemCache do
   @cache_state_key Atom.to_string(__MODULE__) <> "_state"
 
   @doc ~S'''
-  Time travel for SimpleMemCache. 
+  Time travel for SimpleMemCache.
 
   The `f_system_time` parameter is meant for time travel support. You can provide a function that returns the Unix/Posix UTC time in seconds. Set nil to restore the normal system time.
   '''
@@ -36,11 +36,11 @@ defmodule SimpleMemCache do
   * `key` - Key name
   * `minutes_valid` - Minutes to keep the item in cache. Default: nil - do not expire.
   * `keep_alive` - Keep the item in cache if it still accessed. It expires if it is not retrieved in `minutes_valid` minutes. Default: false
-  * `f_new_value` - function that supplies the value. Enables automatic value loading. When `minutes_valid` is not nil and `keep_alive` is false, this function can be launched in a new Erlang process, and it can do this proactively up to 30 seconds before expiration. 
+  * `f_new_value` - function that supplies the value. Enables automatic value loading. When `minutes_valid` is not nil and `keep_alive` is false, this function can be launched in a new Erlang process, and it can do this proactively up to 30 seconds before expiration.
 
   ## Examples
 
-      products = SimpleMemCache.cache(SimpleMemCache, "products", 30, true, 
+      products = SimpleMemCache.cache(SimpleMemCache, "products", 30, true,
          fn() -> File.read!(filename) end
       )
 
@@ -52,8 +52,8 @@ defmodule SimpleMemCache do
     cache_value = ets_get(table, {key, (if keep_alive, do: minutes_valid, else: nil), true}, get_cache_state!(table))
     case cache_value do
        {:ok, value}             -> value
-       {:expire_warning, value} -> spawn(fn -> try do 
-                                                 put(table, key, minutes_valid, f_new_value.()) 
+       {:expire_warning, value} -> spawn(fn -> try do
+                                                 put(table, key, minutes_valid, f_new_value.())
                                                rescue
                                                  ArgumentError -> :error   # table is deleted, ignore
                                                end
@@ -78,15 +78,15 @@ defmodule SimpleMemCache do
   @doc ~S'''
   Get status and value of cached item. Status can be :ok, :expired or :not_cached
 
-  The `minutes_keep_alive` parameter is the number of minutes to keep the item at least in cache. 
-  Does not shorten a previously set expiration time (use put for that). However, 
+  The `minutes_keep_alive` parameter is the number of minutes to keep the item at least in cache.
+  Does not shorten a previously set expiration time (use put for that). However,
   if there wasn't an expiration time it will take the new value. Default: nil - do not change the expire time.
 
   ## Example
-    
+
       iex(1)> products = SimpleMemCache.get(SimpleMemCache, "products", 20)
       {:expired, "Fret dots"}
-    
+
   '''
   @spec get(table, Map.key, integer | nil) :: {term, any}
   def get(table, key, minutes_keep_alive \\ nil) do
@@ -113,9 +113,9 @@ defmodule SimpleMemCache do
   end
 
 
-  ## 
+  ##
   ## The guts
-  ## 
+  ##
 
   # return Unix/Posix UTC time in seconds
   defp system_time do
@@ -195,14 +195,14 @@ defmodule SimpleMemCache do
         # Greetings Neo, buy yourself some time
 
         # The client interface cache-method handles expire_warnings, therefore:
-        # 1 till 30 seconds before expiring, the first caller gets a warning and 30 seconds to come with a new value. 
+        # 1 till 30 seconds before expiring, the first caller gets a warning and 30 seconds to come with a new value.
         # During the next 30 seconds other clients receive ok, with the existing cached value.
-        # After 30 seconds, if no new value is set, again an expire_warning will be given. 
+        # After 30 seconds, if no new value is set, again an expire_warning will be given.
         # The purpose of this: for very frequent requested keys, don't create a give-me-new-value storm when the value expires;
         # assign the task for getting a new value to one client.
         :ets.update_element(table, key, {3, f_system_time.() + 60})
         :expire_warning
-      end 
+      end
     else
       status
     end
@@ -213,13 +213,13 @@ defmodule SimpleMemCache do
 
     # get
     map_value = :ets.lookup(table, key)
-    
+
     # determine status
-    {status, value, expires} = ets_get_status(key, map_value, minutes_keep_alive, warn, now) 
+    {status, value, expires} = ets_get_status(key, map_value, minutes_keep_alive, warn, now)
     status = ets_get_expire_warning(table, key, status, f_system_time)
 
     # if needed, set new expire time to keep this cached item alive
-    if status != :not_cached and minutes_keep_alive != nil and  
+    if status != :not_cached and minutes_keep_alive != nil and
        (is_nil(expires) or (now + minutes_keep_alive * 60 >= expires + 30)) do
         :ets.update_element(table, key, {3, now + minutes_keep_alive * 60 + 30})
     end
