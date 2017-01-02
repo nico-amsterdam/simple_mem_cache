@@ -5,8 +5,18 @@ defmodule SimpleMemCache.Mixfile do
     [app: :simple_mem_cache,
      version: "0.1.1",
      elixir: "~> 1.3",
+
+     # Hex
      description: description,
      package: package,
+
+     # Docs
+     docs: [source_ref: "master", main: "SimpleMemCache",
+            canonical:  "http://hexdocs.pm/simple_mem_cache",
+            source_url: "https://github.com/nico-amsterdam/simple_mem_cache"
+           ],
+
+     build_embedded: Mix.env == :prod,
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps()]
