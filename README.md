@@ -37,7 +37,7 @@ In-memory key-value cache with expiration-time after creation or last access (a.
       def start(_type, _args) do
         import Supervisor.Spec, warn: false
         
-        Eternal.new(SimpleMemCache, [ :named_table, :set, { :read_concurrency, true }, { :write_concurrency, true }])
+        Eternal.start_link(SimpleMemCache, [ :set, { :read_concurrency, true }, { :write_concurrency, true }])
 
     ```
 
