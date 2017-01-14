@@ -26,7 +26,7 @@ defmodule SimpleMemCache do
     :ok
   end
 
-  @doc "returns function that generates Unix/Posix UTC time in seconds."
+  @doc "Returns function that generates Unix/Posix UTC time in seconds."
   def get_system_time_function(table) do
     {f_system_time, _} = get_cache_state!(table)
     f_system_time
