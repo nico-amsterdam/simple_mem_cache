@@ -240,10 +240,10 @@ defmodule SimpleMemCacheTest do
     # We should actually sleep for 30 seconds, but we don't do that in unittests.
     # After 30 seconds the process that calls the new-value function will certainly be ready.
     # Instead we let us send the pid of the spawned process and wait till it is finished.
-    pid = self
+    pid = self()
 
     # It's garanteed that you first get the currently cached value back
-    value = SimpleMemCache.cache(tid, "key1", fn -> send(pid, self); "value2" end);
+    value = SimpleMemCache.cache(tid, "key1", fn -> send(pid, self()); "value2" end);
     assert value == "value1"
 
     spawn_pid = receive do

@@ -3,12 +3,12 @@ defmodule SimpleMemCache.Mixfile do
 
   def project do
     [app: :simple_mem_cache,
-     version: "0.1.1",
+     version: "1.0.0",
      elixir: "~> 1.3",
 
      # Hex
-     description: description,
-     package: package,
+     description: description(),
+     package: package(),
 
      # Docs
      docs: [source_ref: "master", main: "SimpleMemCache",
