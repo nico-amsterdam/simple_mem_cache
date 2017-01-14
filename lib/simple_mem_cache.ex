@@ -112,7 +112,7 @@ defmodule SimpleMemCache do
     ets_remove_expired_entries(table, get_cache_state!(table))
   end
 
-  @doc "Delete the ets table"
+  @doc "Delete the ets table."
   @spec stop(table) :: :ok
   def stop(table) do
     ets_delete(table)
