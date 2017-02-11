@@ -16,28 +16,31 @@ In-memory key-value cache with expiration-time after creation or last access (a.
     ```
 
   2. mix deps.get
-   
+
     ```sh
     $ mix deps.get
     ```
-  
-  3. create ets table:
-  
-  Only ets types: set and ordered_set are supported. 
-  
-  To create the ets table I recommend [Eternal](https://hex.pm/packages/eternal).
-  
+
+  3. create ETS table:
+
+  Only ETS types: set and ordered_set are supported.
+
+  To create the ETS table I recommend [Eternal](https://hex.pm/packages/eternal).
+
   Code example:
 
     ```elixir
 
     defmodule MyProject do
       use Application
-      
+
       def start(_type, _args) do
         import Supervisor.Spec, warn: false
-        
-        Eternal.start_link(SimpleMemCache, [ :set, { :read_concurrency, true }, { :write_concurrency, true }])
+
+        Eternal.start_link(SimpleMemCache, [ :set,
+                                            {:read_concurrency,  true},
+                                            {:write_concurrency, true}
+                                           ])
 
     ```
 
@@ -48,14 +51,16 @@ In-memory key-value cache with expiration-time after creation or last access (a.
   - Example: scrape news and keep it 10 minutes in cache
 
     ```elixir
-    us_news = SimpleMemCache.cache(SimpleMemCache, "news_us", 10, &Scraper.scrape_news_us/0)
+    us_news = SimpleMemCache.cache(SimpleMemCache, "news_us", 10,
+                                  &Scraper.scrape_news_us/0)
     ```
 
   - or with anonymous function:
 
       ```elixir
       def news(country) do
-        SimpleMemCache.cache(SimpleMemCache, "news_" <> country, 10, fn -> Scraper.scrape_news(country) end)
+        SimpleMemCache.cache(SimpleMemCache, "news_" <> country, 10,
+                             fn -> Scraper.scrape_news(country) end)
       end
       ```
 
@@ -65,24 +70,28 @@ Note about automatically new value loading:
 
 ### Keep in cache for a limited time but extend life-time everytime it is accessed
 
-  - Example: cache http response of countries rest service for at least 20 minutes 
+  - Example: cache http response of countries rest service for at least 20 minutes
 
     ```elixir
-    countries_response = SimpleMemCache.cache(SimpleMemCache, "countries_response", 20, true, fn -> HTTPoison.get! "http://restcountries.eu/rest/v1/" end)
+    countries_response = SimpleMemCache.cache(SimpleMemCache,
+             "countries_response",
+             20,
+             true,
+             fn -> HTTPoison.get! "http://restcountries.eu/rest/v1/" end)
     ```
 
-### Keep as long as the ets table exists
+### Keep as long as the ETS table exists
 
   - Example: Cache products retrieved from csv file. Not a good example, because nowadays files are stored on SSD and there will be no performance gain.
-  
+
     ```elixir
-    products = SimpleMemCache.cache(SimpleMemCache, "products", fn -> "products.csv" 
-                                                                      |> File.stream! 
-                                                                      |> CSV.parse_stream 
-                                                                      |> Enum.to_list 
+    products = SimpleMemCache.cache(SimpleMemCache, "products", fn -> "products.csv"
+                                                                      |> File.stream!
+                                                                      |> CSV.parse_stream
+                                                                      |> Enum.to_list
                                                                 end)
     ```
-    
+
   - updates are still possible:
 
     ```elixir

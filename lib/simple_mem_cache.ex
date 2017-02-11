@@ -3,6 +3,103 @@ defmodule SimpleMemCache do
   @moduledoc ~S'''
   In-memory key-value cache with expiration-time after creation/modification/access,
   automatic value loading and time travel support.
+
+  ## Prepare ETS table to be used by SimpleMemCache
+
+  Example 1: plain ETS:
+
+    ```elixir
+    tid = :ets.new(__MODULE__, [:set,
+                                 :public,
+                                {:read_concurrency,  true},
+                                {:write_concurrency, true}
+                               ])
+    ```
+
+  Example 2: use [Eternal](https://hex.pm/packages/eternal) to create the ETS table:
+
+    ```elixir
+
+    defmodule MyProject do
+      use Application
+
+      def start(_type, _args) do
+        import Supervisor.Spec, warn: false
+
+        Eternal.start_link(SimpleMemCache,
+                           [:set,
+                            {:read_concurrency,  true},
+                            {:write_concurrency, true}
+                           ])
+
+    ```
+
+  Only ETS types: set and ordered_set are supported.
+
+  ## Usage
+
+  ### Keep in cache for a limited time, automatically load new value after that
+
+    - Example: scrape news and keep it 10 minutes in cache
+
+      ```elixir
+      us_news = SimpleMemCache.cache(SimpleMemCache, "news_us", 10,
+                                     &Scraper.scrape_news_us/0)
+      ```
+
+    - or with anonymous function:
+
+        ```elixir
+        def news(country) do
+          SimpleMemCache.cache(SimpleMemCache, "news_" <> country, 10,
+                               fn -> Scraper.scrape_news(country) end)
+        end
+        ```
+
+  Note about automatically new value loading:
+  - How long does this function take to get the new value, and is this acceptable when the old value is expired? If it takes too long, consider to use an scheduler to regularly recalculate the new value and update the cache with that.
+
+
+  ### Keep in cache for a limited time but extend life-time everytime it is accessed
+
+    - Example: cache http response of countries rest service for at least 20 minutes
+
+      ```elixir
+      countries_response = SimpleMemCache.cache(SimpleMemCache,
+               "countries_response",
+               20,
+               true,
+               fn -> HTTPoison.get! "http://restcountries.eu/rest/v1/" end)
+      ```
+
+  ### Keep as long as the ETS table exists
+
+    - Example: Cache products retrieved from csv file. Not a good example, because nowadays files are stored on SSD and there will be no performance gain.
+
+      ```elixir
+      products = SimpleMemCache.cache(SimpleMemCache, "products", fn -> "products.csv"
+                                                                        |> File.stream!
+                                                                        |> CSV.parse_stream
+                                                                        |> Enum.to_list
+                                                                  end)
+      ```
+
+    - updates are still possible:
+
+      ```elixir
+      SimpleMemCache.put(SimpleMemCache, "products", new_value)
+      ```
+
+  or you can force an automatically load at first access by invalidating the cached item.
+
+  ### Invalidate cached item
+
+    - Example: remove products from cache
+
+      ```elixir
+      old_value = SimpleMemCache.remove(SimpleMemCache, "products")
+      ```
+
   '''
 
   @typedoc "The table id (Tid) or table name"
@@ -35,7 +132,7 @@ defmodule SimpleMemCache do
   @doc ~S'''
   Cache value returned by the supplied function.
 
-  * `table` - Name of the ets table.
+  * `table` - Name of the ETS table.
   * `key` - Key name
   * `minutes_valid` - Minutes to keep the item in cache. Default: nil - do not expire.
   * `keep_alive` - Keep the item in cache if it still accessed. It expires if it is not retrieved in `minutes_valid` minutes. Default: false
@@ -52,7 +149,7 @@ defmodule SimpleMemCache do
   '''
   @spec cache(table, Map.key, integer | nil, boolean | nil, (() -> any)) :: any
   def cache(table, key, minutes_valid \\ nil, keep_alive \\ false, f_new_value) do
-    cache_value = 
+    cache_value =
       ets_get(table,
               {key, (if keep_alive, do: minutes_valid, else: nil), true},
               get_cache_state!(table))
@@ -112,7 +209,7 @@ defmodule SimpleMemCache do
     ets_remove_expired_entries(table, get_cache_state!(table))
   end
 
-  @doc "Delete the ets table."
+  @doc "Delete the ETS table."
   @spec stop(table) :: :ok
   def stop(table) do
     ets_delete(table)
@@ -226,11 +323,11 @@ defmodule SimpleMemCache do
         # Greetings Neo, buy yourself some time
 
         # The client interface cache-method handles expire_warnings, therefore:
-        # 1 till 30 seconds before expiring, the first caller gets a 
+        # 1 till 30 seconds before expiring, the first caller gets a
         # warning and 30 seconds to come with a new value.
         # During the next 30 seconds other clients receive ok, with the existing cached value.
         # After 30 seconds, if no new value is set, again an expire_warning will be given.
-        # The purpose of this: for very frequent requested keys, 
+        # The purpose of this: for very frequent requested keys,
         # don't create a give-me-new-value storm when the value expires;
         # assign the task for getting a new value to one client.
         # 3 = third position in tuple. It holds the expire time.

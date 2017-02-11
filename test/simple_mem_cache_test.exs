@@ -23,7 +23,7 @@ defmodule SimpleMemCacheTest do
     assert putval == "value1"
 
     SimpleMemCache.set_system_time_function(tid, f_now_plus_10);
-    
+
     result = SimpleMemCache.get(tid, "key1")
     assert result == {:expired, "value1"}
 
@@ -235,7 +235,7 @@ defmodule SimpleMemCacheTest do
     putval = SimpleMemCache.put(tid, "key1", 8, "value1");
     assert putval == "value1"
 
-    SimpleMemCache.set_system_time_function(tid, f_now_plus_7_plus_30_seconds) 
+    SimpleMemCache.set_system_time_function(tid, f_now_plus_7_plus_30_seconds)
 
     # We should actually sleep for 30 seconds, but we don't do that in unittests.
     # After 30 seconds the process that calls the new-value function will certainly be ready.
@@ -255,9 +255,9 @@ defmodule SimpleMemCacheTest do
     # now wait till the process is finished
     assert_receive {:DOWN, ^ref, :process, ^spawn_pid, :noproc}, 500
 
-    SimpleMemCache.set_system_time_function(tid, f_now_plus_8_plus_31_second) 
+    SimpleMemCache.set_system_time_function(tid, f_now_plus_8_plus_31_second)
     result = SimpleMemCache.get(tid, "key1");
-    assert result == {:ok, "value2"} 
+    assert result == {:ok, "value2"}
 
     SimpleMemCache.stop(tid)
   end
