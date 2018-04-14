@@ -1,5 +1,4 @@
 defmodule SimpleMemCache do
-
   @moduledoc ~S'''
   In-memory key-value cache with expiration-time after creation/modification/access,
   automatic value loading and time travel support.
@@ -124,6 +123,7 @@ defmodule SimpleMemCache do
   end
 
   @doc "Returns function that generates Unix/Posix UTC time in seconds."
+  @spec get_system_time_function(table) :: (() -> integer)
   def get_system_time_function(table) do
     {f_system_time, _} = get_cache_state!(table)
     f_system_time
@@ -147,33 +147,45 @@ defmodule SimpleMemCache do
       news_page = SimpleMemCache.cache(SimpleMemCache, "news", 10, &scrape_news/0)
 
   '''
-  @spec cache(table, Map.key, integer | nil, boolean | nil, (() -> any)) :: any
+  @spec cache(table, Map.key(), integer | nil, boolean | nil, (() -> any)) :: any
   def cache(table, key, minutes_valid \\ nil, keep_alive \\ false, f_new_value) do
     cache_value =
-      ets_get(table,
-              {key, (if keep_alive, do: minutes_valid, else: nil), true},
-              get_cache_state!(table))
+      ets_get(
+        table,
+        {key, if(keep_alive, do: minutes_valid, else: nil), true},
+        get_cache_state!(table)
+      )
+
     case cache_value do
-      {:ok, value}             -> value
-      {:expire_warning, value} -> spawn(fn -> try do
-                                                put(table, key, minutes_valid, f_new_value.())
-                                              rescue
-                                                ArgumentError -> :error   # table is deleted, ignore
-                                              end
-                                        end)
-                                  value
-      _                        -> put(table, key, minutes_valid, f_new_value.())
+      {:ok, value} ->
+        value
+
+      {:expire_warning, value} ->
+        spawn(fn ->
+          try do
+            put(table, key, minutes_valid, f_new_value.())
+          rescue
+            # table is deleted, ignore
+            ArgumentError ->
+              :error
+          end
+        end)
+
+        value
+
+      _ ->
+        put(table, key, minutes_valid, f_new_value.())
     end
   end
 
   @doc "Create or update an item in cache."
-  @spec put(table, Map.key, integer | nil, Map.value) :: any
+  @spec put(table, Map.key(), integer | nil, Map.value()) :: any
   def put(table, key, minutes_valid \\ nil, value) do
     ets_put(table, {key, minutes_valid, value}, get_cache_state!(table))
   end
 
   @doc "Remove an item from cache. Returns the value of the removed object."
-  @spec remove(table, Map.key) :: any
+  @spec remove(table, Map.key()) :: any
   def remove(table, key) do
     ets_remove(table, {key}, get_cache_state!(table))
   end
@@ -191,13 +203,13 @@ defmodule SimpleMemCache do
       {:expired, "Fret dots"}
 
   '''
-  @spec get(table, Map.key, integer | nil) :: {term, any}
+  @spec get(table, Map.key(), integer | nil) :: {term, any}
   def get(table, key, minutes_keep_alive \\ nil) do
     ets_get(table, {key, minutes_keep_alive, false}, get_cache_state!(table))
   end
 
   @doc "Get value of cached item. Nil if is not cached or when value is nil."
-  @spec get!(table, Map.key, integer | nil) :: any
+  @spec get!(table, Map.key(), integer | nil) :: any
   def get!(table, key, minutes_keep_alive \\ nil) do
     {_, value} = get(table, key, minutes_keep_alive)
     value
@@ -215,7 +227,6 @@ defmodule SimpleMemCache do
     ets_delete(table)
   end
 
-
   ##
   ## The guts
   ##
@@ -227,9 +238,13 @@ defmodule SimpleMemCache do
 
   defp get_cache_state!(table) do
     key = @cache_state_key
+
     case :ets.lookup(table, key) do
-       [{^key, f_system_time, expire_check_time}] -> {f_system_time || &system_time/0, expire_check_time}
-       _ -> {&system_time/0, nil}
+      [{^key, f_system_time, expire_check_time}] ->
+        {f_system_time || &system_time/0, expire_check_time}
+
+      _ ->
+        {&system_time/0, nil}
     end
   end
 
@@ -239,8 +254,9 @@ defmodule SimpleMemCache do
 
   defp check_expired(table, now, expire_check_time) do
     if !is_nil(expire_check_time) and now >= expire_check_time do
-       remove_expired_entries(table)
+      remove_expired_entries(table)
     end
+
     :ok
   end
 
@@ -255,6 +271,7 @@ defmodule SimpleMemCache do
     else
       check_expired(table, now, expire_check_time)
     end
+
     value
   end
 
@@ -267,8 +284,9 @@ defmodule SimpleMemCache do
   defp ets_remove(table, {key}, {f_system_time, expire_check_time}) do
     removed = :ets.take(table, key)
     check_expired(table, f_system_time.(), expire_check_time)
+
     if length(removed) == 1 do
-      [{^key,value,_,_}] = removed
+      [{^key, value, _, _}] = removed
       value
     else
       nil
@@ -276,38 +294,29 @@ defmodule SimpleMemCache do
   end
 
   defp ets_get_status(_key, [], _minutes_keep_alive, _warn, _now) do
-     {:not_cached, nil, nil}
+    {:not_cached, nil, nil}
   end
 
   defp ets_get_status(key, [{ckey, value, expires, _}], minutes_keep_alive, _warn, _now)
-    when
-      key == ckey and
-      ((minutes_keep_alive != nil and minutes_keep_alive >= 0) or
-       (is_nil(minutes_keep_alive) and is_nil(expires))) do
+       when key == ckey and
+              ((minutes_keep_alive != nil and minutes_keep_alive >= 0) or
+                 (is_nil(minutes_keep_alive) and is_nil(expires))) do
     {:ok, value, expires}
   end
 
   defp ets_get_status(key, [{ckey, value, expires, count}], minutes_keep_alive, warn, now)
-    when
-      key == ckey and
-      warn and
-      count == 0 and
-      is_nil(minutes_keep_alive) and
-      expires <= now + 30 and expires > now do
+       when key == ckey and warn and count == 0 and is_nil(minutes_keep_alive) and
+              expires <= now + 30 and expires > now do
     {:expire_warning, value, expires}
   end
 
   defp ets_get_status(key, [{ckey, value, expires, _}], _minutes_keep_alive, _warn, now)
-    when
-      key == ckey and
-      expires != nil and
-      expires >= now do
+       when key == ckey and expires != nil and expires >= now do
     {:ok, value, expires}
   end
 
   defp ets_get_status(key, [{ckey, old_value, expires, _}], _minutes_keep_alive, _warn, _now)
-    when
-      key == ckey do
+       when key == ckey do
     {:expired, old_value, expires}
   end
 
@@ -316,6 +325,7 @@ defmodule SimpleMemCache do
     if status == :expire_warning do
       # atomic operation (4 = fourth position in tuple which hold the counter, 1 = increment one):
       warning_count = :ets.update_counter(table, key, {4, 1})
+
       if warning_count != 1 do
         # pitty, degrade to ok status
         :ok
@@ -351,9 +361,9 @@ defmodule SimpleMemCache do
 
     # if needed, set new expire time to keep this cached item alive
     if status != :not_cached and minutes_keep_alive != nil and
-       (is_nil(expires) or (now + minutes_keep_alive * 60 >= expires + 30)) do
-        # 3 = third position in tuple. It holds the expire time.
-        :ets.update_element(table, key, {3, now + minutes_keep_alive * 60 + 30})
+         (is_nil(expires) or now + minutes_keep_alive * 60 >= expires + 30) do
+      # 3 = third position in tuple. It holds the expire time.
+      :ets.update_element(table, key, {3, now + minutes_keep_alive * 60 + 30})
     end
 
     # if we didn't check for expired items and now this item has gotten an expire time
@@ -375,10 +385,11 @@ defmodule SimpleMemCache do
 
     # are there any entries with an expire time left?
 
-    temp_entries_count = :ets.select_count(table, [{{:"$1", :_, :"$2", :_}, [{:"/=", :"$2", nil}], [true]}])
+    temp_entries_count =
+      :ets.select_count(table, [{{:"$1", :_, :"$2", :_}, [{:"/=", :"$2", nil}], [true]}])
+
     next_expire_check_time = if temp_entries_count > 0, do: f_system_time.() + 60, else: nil
     set_expire_check_time(table, f_system_time, next_expire_check_time)
     :ok
   end
-
 end

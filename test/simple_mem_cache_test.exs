@@ -17,12 +17,12 @@ defmodule SimpleMemCacheTest do
     f_now = get_time_travel_function(now)
     f_now_plus_10 = get_time_travel_function(now, 10)
 
-    SimpleMemCache.set_system_time_function(tid, f_now);
+    SimpleMemCache.set_system_time_function(tid, f_now)
 
-    putval = SimpleMemCache.put(tid, "key1", 8, "value1");
+    putval = SimpleMemCache.put(tid, "key1", 8, "value1")
     assert putval == "value1"
 
-    SimpleMemCache.set_system_time_function(tid, f_now_plus_10);
+    SimpleMemCache.set_system_time_function(tid, f_now_plus_10)
 
     result = SimpleMemCache.get(tid, "key1")
     assert result == {:expired, "value1"}
@@ -38,16 +38,16 @@ defmodule SimpleMemCacheTest do
     f_now = get_time_travel_function(now)
     f_now_plus_10 = get_time_travel_function(now, 10)
 
-    SimpleMemCache.set_system_time_function(tid, f_now);
+    SimpleMemCache.set_system_time_function(tid, f_now)
 
-    putval = SimpleMemCache.put(tid, "key1", 8, "value1");
+    putval = SimpleMemCache.put(tid, "key1", 8, "value1")
     assert putval == "value1"
 
-    SimpleMemCache.set_system_time_function(tid, f_now_plus_10);
+    SimpleMemCache.set_system_time_function(tid, f_now_plus_10)
 
-    :ok = SimpleMemCache.remove_expired_entries(tid);
+    :ok = SimpleMemCache.remove_expired_entries(tid)
 
-    result = SimpleMemCache.get(tid, "key1");
+    result = SimpleMemCache.get(tid, "key1")
     assert result == {:not_cached, nil}
 
     SimpleMemCache.stop(tid)
@@ -58,22 +58,22 @@ defmodule SimpleMemCacheTest do
 
     now = :os.system_time(:seconds)
     f_now = get_time_travel_function(now)
-    f_now_plus_5  = get_time_travel_function(now, 5 )
+    f_now_plus_5  = get_time_travel_function(now, 5)
     f_now_plus_10 = get_time_travel_function(now, 10)
 
-    SimpleMemCache.set_system_time_function(tid, f_now);
+    SimpleMemCache.set_system_time_function(tid, f_now)
 
-    putval = SimpleMemCache.put(tid, "key1", 8, "value1");
+    putval = SimpleMemCache.put(tid, "key1", 8, "value1")
     assert putval == "value1"
 
-    SimpleMemCache.set_system_time_function(tid, f_now_plus_5);
+    SimpleMemCache.set_system_time_function(tid, f_now_plus_5)
 
-    result = SimpleMemCache.get(tid, "key1");
+    result = SimpleMemCache.get(tid, "key1")
     assert result == {:ok, "value1"}
 
-    SimpleMemCache.set_system_time_function(tid, f_now_plus_10);
+    SimpleMemCache.set_system_time_function(tid, f_now_plus_10)
 
-    result = SimpleMemCache.get(tid, "key1");
+    result = SimpleMemCache.get(tid, "key1")
     assert result == {:expired, "value1"}
 
     SimpleMemCache.stop(tid)
@@ -84,29 +84,29 @@ defmodule SimpleMemCacheTest do
 
     now = :os.system_time(:seconds)
     f_now = get_time_travel_function(now)
-    f_now_plus_5  = get_time_travel_function(now, 5 )
+    f_now_plus_5  = get_time_travel_function(now, 5)
     f_now_plus_10 = get_time_travel_function(now, 10)
     f_now_plus_20 = get_time_travel_function(now, 20)
 
-    SimpleMemCache.set_system_time_function(tid, f_now);
+    SimpleMemCache.set_system_time_function(tid, f_now)
 
-    putval = SimpleMemCache.put(tid, "key1", 8, "value1");
+    putval = SimpleMemCache.put(tid, "key1", 8, "value1")
     assert putval == "value1"
 
-    SimpleMemCache.set_system_time_function(tid, f_now_plus_5);
+    SimpleMemCache.set_system_time_function(tid, f_now_plus_5)
 
-    result = SimpleMemCache.get(tid, "key1", 8);
+    result = SimpleMemCache.get(tid, "key1", 8)
     assert result == {:ok, "value1"}
 
-    SimpleMemCache.set_system_time_function(tid, f_now_plus_10);
+    SimpleMemCache.set_system_time_function(tid, f_now_plus_10)
 
-    result = SimpleMemCache.get(tid, "key1", 8);
+    result = SimpleMemCache.get(tid, "key1", 8)
     assert result == {:ok, "value1"}
 
-    SimpleMemCache.set_system_time_function(tid, f_now_plus_20);
+    SimpleMemCache.set_system_time_function(tid, f_now_plus_20)
 
     # this might supprise you, but remove_expired_entries didn't run, so the expired key is awakened
-    result = SimpleMemCache.get(tid, "key1", 8);
+    result = SimpleMemCache.get(tid, "key1", 8)
     assert result == {:ok, "value1"}
 
     SimpleMemCache.stop(tid)
@@ -117,33 +117,33 @@ defmodule SimpleMemCacheTest do
 
     now = :os.system_time(:seconds)
     f_now = get_time_travel_function(now)
-    f_now_plus_5  = get_time_travel_function(now, 5 )
+    f_now_plus_5  = get_time_travel_function(now, 5)
     f_now_plus_10 = get_time_travel_function(now, 10)
     f_now_plus_20 = get_time_travel_function(now, 20)
 
-    SimpleMemCache.set_system_time_function(tid, f_now);
+    SimpleMemCache.set_system_time_function(tid, f_now)
 
-    putval = SimpleMemCache.put(tid, "key1", 8, "value1");
+    putval = SimpleMemCache.put(tid, "key1", 8, "value1")
     assert putval == "value1"
 
-    SimpleMemCache.set_system_time_function(tid, f_now_plus_5);
+    SimpleMemCache.set_system_time_function(tid, f_now_plus_5)
 
-    result = SimpleMemCache.get(tid, "key1", 8);
+    result = SimpleMemCache.get(tid, "key1", 8)
     assert result == {:ok, "value1"}
 
-    SimpleMemCache.set_system_time_function(tid, f_now_plus_10);
+    SimpleMemCache.set_system_time_function(tid, f_now_plus_10)
 
     # nothing has expired yet
-    :ok = SimpleMemCache.remove_expired_entries(tid);
+    :ok = SimpleMemCache.remove_expired_entries(tid)
 
-    result = SimpleMemCache.get(tid, "key1", 8);
+    result = SimpleMemCache.get(tid, "key1", 8)
     assert result == {:ok, "value1"}
 
-    SimpleMemCache.set_system_time_function(tid, f_now_plus_20);
+    SimpleMemCache.set_system_time_function(tid, f_now_plus_20)
 
-    :ok = SimpleMemCache.remove_expired_entries(tid);
+    :ok = SimpleMemCache.remove_expired_entries(tid)
 
-    result = SimpleMemCache.get(tid, "key1", 8);
+    result = SimpleMemCache.get(tid, "key1", 8)
     assert result == {:not_cached, nil}
 
     SimpleMemCache.stop(tid)
@@ -158,26 +158,26 @@ defmodule SimpleMemCacheTest do
     f_now_plus_20 = get_time_travel_function(now, 20)
     f_now_plus_30 = get_time_travel_function(now, 30)
 
-    SimpleMemCache.set_system_time_function(tid, f_now);
+    SimpleMemCache.set_system_time_function(tid, f_now)
 
-    putval = SimpleMemCache.put(tid, "key1", "value1");
+    putval = SimpleMemCache.put(tid, "key1", "value1")
     assert putval == "value1"
 
-    SimpleMemCache.set_system_time_function(tid, f_now_plus_10);
+    SimpleMemCache.set_system_time_function(tid, f_now_plus_10)
 
-    :ok = SimpleMemCache.remove_expired_entries(tid);
+    :ok = SimpleMemCache.remove_expired_entries(tid)
 
-    SimpleMemCache.set_system_time_function(tid, f_now_plus_20);
+    SimpleMemCache.set_system_time_function(tid, f_now_plus_20)
 
-    result = SimpleMemCache.get(tid, "key1");
+    result = SimpleMemCache.get(tid, "key1")
     assert result == {:ok, "value1"}
 
-    SimpleMemCache.set_system_time_function(tid, f_now_plus_30);
+    SimpleMemCache.set_system_time_function(tid, f_now_plus_30)
 
-    putval = SimpleMemCache.put(tid, "key1", "value2");
+    putval = SimpleMemCache.put(tid, "key1", "value2")
     assert putval == "value2"
 
-    result = SimpleMemCache.get(tid, "key1");
+    result = SimpleMemCache.get(tid, "key1")
     assert result == {:ok, "value2"}
 
     SimpleMemCache.stop(tid)
@@ -193,30 +193,30 @@ defmodule SimpleMemCacheTest do
     f_now_plus_30 = get_time_travel_function(now, 30)
     f_now_plus_40 = get_time_travel_function(now, 40)
 
-    SimpleMemCache.set_system_time_function(tid, f_now);
+    SimpleMemCache.set_system_time_function(tid, f_now)
 
-    putval = SimpleMemCache.put(tid, "key1", "value1");
+    putval = SimpleMemCache.put(tid, "key1", "value1")
     assert putval == "value1"
 
-    SimpleMemCache.set_system_time_function(tid, f_now_plus_10);
+    SimpleMemCache.set_system_time_function(tid, f_now_plus_10)
 
-    result = SimpleMemCache.get(tid, "key1", 8);
+    result = SimpleMemCache.get(tid, "key1", 8)
     assert result == {:ok, "value1"}
 
-    SimpleMemCache.set_system_time_function(tid, f_now_plus_20);
+    SimpleMemCache.set_system_time_function(tid, f_now_plus_20)
 
-    result = SimpleMemCache.get(tid, "key1");
+    result = SimpleMemCache.get(tid, "key1")
     assert result == {:expired, "value1"}
 
-    SimpleMemCache.set_system_time_function(tid, f_now_plus_30);
+    SimpleMemCache.set_system_time_function(tid, f_now_plus_30)
 
     # a new put overwrites whatever expire time there was
-    putval = SimpleMemCache.put(tid, "key1", "value2");
+    putval = SimpleMemCache.put(tid, "key1", "value2")
     assert putval == "value2"
 
-    SimpleMemCache.set_system_time_function(tid, f_now_plus_40);
+    SimpleMemCache.set_system_time_function(tid, f_now_plus_40)
 
-    result = SimpleMemCache.get(tid, "key1");
+    result = SimpleMemCache.get(tid, "key1")
     assert result == {:ok, "value2"}
 
     SimpleMemCache.stop(tid)
@@ -230,9 +230,9 @@ defmodule SimpleMemCacheTest do
     f_now_plus_7_plus_30_seconds = get_time_travel_function(now, 7, 30)
     f_now_plus_8_plus_31_second = get_time_travel_function(now, 8, 31)
 
-    SimpleMemCache.set_system_time_function(tid, f_now);
+    SimpleMemCache.set_system_time_function(tid, f_now)
 
-    putval = SimpleMemCache.put(tid, "key1", 8, "value1");
+    putval = SimpleMemCache.put(tid, "key1", 8, "value1")
     assert putval == "value1"
 
     SimpleMemCache.set_system_time_function(tid, f_now_plus_7_plus_30_seconds)
@@ -243,7 +243,12 @@ defmodule SimpleMemCacheTest do
     pid = self()
 
     # It's garanteed that you first get the currently cached value back
-    value = SimpleMemCache.cache(tid, "key1", fn -> send(pid, self()); "value2" end);
+    value = SimpleMemCache.cache(
+              tid, 
+              "key1", 
+              fn -> send(pid, self())
+                    "value2" 
+              end)
     assert value == "value1"
 
     spawn_pid = receive do
@@ -256,7 +261,7 @@ defmodule SimpleMemCacheTest do
     assert_receive {:DOWN, ^ref, :process, ^spawn_pid, :noproc}, 500
 
     SimpleMemCache.set_system_time_function(tid, f_now_plus_8_plus_31_second)
-    result = SimpleMemCache.get(tid, "key1");
+    result = SimpleMemCache.get(tid, "key1")
     assert result == {:ok, "value2"}
 
     SimpleMemCache.stop(tid)
