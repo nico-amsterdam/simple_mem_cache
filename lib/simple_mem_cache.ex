@@ -102,7 +102,7 @@ defmodule SimpleMemCache do
   '''
 
   @typedoc "The table id (Tid) or table name"
-  @type table :: number | atom
+  @type table :: atom | :ets.tid()
 
   @cache_state_key Atom.to_string(__MODULE__) <> "_state"
 
