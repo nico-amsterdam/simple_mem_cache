@@ -26,7 +26,7 @@ defmodule SimpleMemCache.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger]]
+    [extra_applications: [:logger]]
   end
 
   # Dependencies can be Hex packages:
@@ -40,8 +40,8 @@ defmodule SimpleMemCache.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:ex_doc,  "~> 0.14", only: :dev},
-      {:credo,  "~> 0.5", only: :dev}
+      {:ex_doc, "~> 0.22.6", only: :dev},
+      {:credo,  "~> 1.4"   , only: :dev}
     ]
   end
 

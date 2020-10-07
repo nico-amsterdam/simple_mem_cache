@@ -58,7 +58,6 @@ defmodule SimpleMemCache do
   Note about automatically new value loading:
   - How long does this function take to get the new value, and is this acceptable when the old value is expired? If it takes too long, consider to use an scheduler to regularly recalculate the new value and update the cache with that.
 
-
   ### Keep in cache for a limited time but extend life-time everytime it is accessed
 
     - Example: cache http response of countries rest service for at least 20 minutes

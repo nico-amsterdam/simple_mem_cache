@@ -30,7 +30,6 @@ defmodule SimpleMemCacheTest do
     SimpleMemCache.stop(tid)
   end
 
-
   test "value is expired and removed" do
     tid = :ets.new(__MODULE__, [:set, :public, {:read_concurrency, true}, {:write_concurrency, true}])
 
@@ -244,10 +243,10 @@ defmodule SimpleMemCacheTest do
 
     # It's garanteed that you first get the currently cached value back
     value = SimpleMemCache.cache(
-              tid, 
-              "key1", 
+              tid,
+              "key1",
               fn -> send(pid, self())
-                    "value2" 
+                    "value2"
               end)
     assert value == "value1"
 
