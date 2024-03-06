@@ -3,7 +3,7 @@ defmodule SimpleMemCache.Mixfile do
 
   def project do
     [app: :simple_mem_cache,
-     version: "1.0.0",
+     version: "1.0.1",
      elixir: "~> 1.3",
 
      # Hex
@@ -40,8 +40,8 @@ defmodule SimpleMemCache.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:ex_doc, "~> 0.22.6", only: :dev},
-      {:credo,  "~> 1.4"   , only: :dev}
+      {:ex_doc, "~> 0.31.2", only: :dev},
+      {:credo,  "~> 1.7"   , only: :dev}
     ]
   end
 
