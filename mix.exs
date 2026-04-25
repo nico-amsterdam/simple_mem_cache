@@ -40,8 +40,8 @@ defmodule SimpleMemCache.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:ex_doc, "~> 0.34.2", only: :dev, runtime: false},
-      {:credo,  "~> 1.7"   , only: :dev, runtime: false}
+      {:ex_doc, "~> 0.40", only: :dev, runtime: false},
+      {:credo,  "~> 1.7" , only: :dev, runtime: false}
     ]
   end
 
